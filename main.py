@@ -2,16 +2,121 @@ import cv2
 from tkinter import *
 from PIL import ImageTk, Image
 from random import randint
+from enum import Enum
+
 
 walls = []
 
-def move_image():
-    canvas.move(item, 1, 0)
-    canvas.after(100, move_image)
-    print(canvas.coords(item))
+
+class Roomba():
+
+    class direction(Enum):
+        up = 1
+        down = 2
+        right = 3
+        left = 4
+        up_left = 5
+        up_right = 6
+        down_right = 7
+        down_left = 8
+
+
+    def __init__(self):
+        self.x = canvas.coords(item)[0]
+        self.y = canvas.coords(item)[1]
+        self.dir = self.direction["up_right"]
+
+    def detecting_walls(self):
+        #identify wall direction
+        right_walls = []
+        left_walls = []
+        up_walls = []
+        down_walls = []
+
+        for wall in walls:
+            if wall[0] != wall[2]:
+                #move on x-axis
+                if wall[0] < wall[2]:
+                    right_walls.append(wall)
+                else:
+                    left_walls.append(wall)
+            elif wall[1] < wall[3]:
+                down_walls.append(wall)
+            else:
+                up_walls.append(wall)
+    
+
+        cord_x = canvas.coords(item)[0]
+        cord_y = canvas.coords(item)[1]
+
+        collision = False
+
+        if self.dir.name == "right" or self.dir.name == "down_right" or self.dir.name == "up_right":
+            for i in down_walls:
+                if cord_x + 15 >= i[0] and cord_y >= i[1] and cord_y <= i[3]:
+                    collision = True
+        if self.dir.name == "left" or self.dir.name == "down_left" or self.dir.name == "up_left":
+            for i in up_walls:
+                if cord_x - 15 <= i[0] and cord_y <= i[1] and cord_y >= i[3]:
+                    collision = True
+        if self.dir.name == "up" or self.dir.name == "up_right" or self.dir.name == "up_left":
+            for i in right_walls:
+                if cord_y - 15 <= i[1] and cord_x >= i[0] and cord_x <= i[2]:
+                    collision = True
+        if self.dir.name == "down" or self.dir.name == "down_left" or self.dir.name == "down_right":
+            for i in left_walls:
+                if cord_y + 15 >= i[1] and cord_x <= i[0] and cord_x >= i[2]:
+                    collision = True
+        
+        if collision:
+            current_direction = self.dir.value
+            new_direction = randint(1, 8)
+            while new_direction == current_direction:
+                new_direction = randint(1, 8)
+            
+            self.dir = self.direction(new_direction)
+
+    def move(self):
+
+        pixels_x = 0
+        pixels_y = 0
+        if self.dir.name == "up":
+            pixels_x = 0
+            pixels_y = -1
+        elif self.dir.name == "down":
+            pixels_x = 0
+            pixels_y = 1
+        elif self.dir.name == "left":
+            pixels_x = -1
+            pixels_y = 0
+        elif self.dir.name == "right":
+            pixels_x = 1
+            pixels_y = 0
+        elif self.dir.name == "up_left":
+            pixels_x = -1
+            pixels_y = -1
+        elif self.dir.name == "down_left":
+            pixels_x = -1
+            pixels_y = 1
+        elif self.dir.name == "down_right":
+            pixels_x = 1
+            pixels_y = 1
+        else:
+            pixels_x = 1
+            pixels_y = -1
+
+        canvas.move(item, pixels_x, pixels_y)
+        canvas.after(1, self.move)
+
+        self.detecting_walls()
+        print(self.dir.name)
+        print(canvas.coords(item))
+
+
 
 def draw_scenario():
 
+    #Start drawing scenario for random room
     x = randint(120, 500)
     canvas.create_line(100, 100, x, 100, tags="wall")
     walls.append([100, 100, x, 100])
@@ -44,7 +149,10 @@ def draw_scenario():
     x = 100
     canvas.create_line(x, y, x, 100, tags="wall")
     walls.append([x, y, x, 100])
+    #end Drawing room
 
+
+    #place the roomba next to a random wall
     select_wall = randint(0, 7)
     change_x = 0
     change_y = 0
@@ -68,9 +176,9 @@ def draw_scenario():
     else:
         y_roomba = randint(walls[select_wall][1], walls[select_wall][3]) + change_y
     
-    item = canvas.create_image(x_roomba, y_roomba, image= image)
+    global item
 
-    return item
+    item = canvas.create_image(x_roomba, y_roomba, image= image)
 
 def check():
     if var.get() == 0:
@@ -88,9 +196,10 @@ def check():
 
 
 #resize image
-img = cv2.imread(r"C:\Users\dadbc\Desktop\Phy\Repositorios\Roomba\robot.png")
+path = r"C:\Users\dadbc\Desktop\Phy\Repositorios\Roomba\robot.png"
+img = cv2.imread(path)
 img = cv2.resize(img, (25, 25))
-cv2.imwrite(r"C:\Users\dadbc\Desktop\Phy\Repositorios\Roomba\robot.png", img)
+cv2.imwrite(path, img)
 #end resize
 
 #create window
@@ -100,16 +209,17 @@ root.minsize(1000, 700)
 root.maxsize(1000, 700)
 
 #set image and canvas
-image = ImageTk.PhotoImage(Image.open(r"C:\Users\dadbc\Desktop\Phy\Repositorios\Roomba\robot.png"))
+
 width = 80
 height = 80
 canvas = Canvas(width=width, height=height, bg="white")
 canvas.pack(expand=1, fill=BOTH)
-x = (width) / 2.0
-y = (height) / 2.0
+image = ImageTk.PhotoImage(Image.open(path))
 
 #draw the scenario and the roomba
-item = draw_scenario()
+draw_scenario()
+
+roomba = Roomba()
 
 #Checkbox to show or not the scenario
 var = IntVar()
@@ -119,7 +229,7 @@ checkbox.toggle()
 
 
 #Move image function
-#move_image()
+roomba.move()
 
 root.mainloop()
 
