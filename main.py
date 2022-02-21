@@ -1,3 +1,4 @@
+from calendar import c
 import cv2
 from tkinter import *
 from PIL import ImageTk, Image
@@ -25,29 +26,14 @@ class Roomba():
         self.x = canvas.coords(item)[0]
         self.y = canvas.coords(item)[1]
         self.dir = self.direction["up_right"]
+        self.knows = set()
+        self.path = []
 
-    def detecting_walls(self):
-        #identify wall direction
-        right_walls = []
-        left_walls = []
-        up_walls = []
-        down_walls = []
-
-        for wall in walls:
-            if wall[0] != wall[2]:
-                #move on x-axis
-                if wall[0] < wall[2]:
-                    right_walls.append(wall)
-                else:
-                    left_walls.append(wall)
-            elif wall[1] < wall[3]:
-                down_walls.append(wall)
-            else:
-                up_walls.append(wall)
-    
+    def detecting_walls(self, right_walls, left_walls, up_walls, down_walls):
 
         cord_x = canvas.coords(item)[0]
         cord_y = canvas.coords(item)[1]
+
 
         collision = False
 
@@ -77,7 +63,6 @@ class Roomba():
             self.dir = self.direction(new_direction)
 
     def move(self):
-
         pixels_x = 0
         pixels_y = 0
         if self.dir.name == "up":
@@ -94,27 +79,38 @@ class Roomba():
             pixels_y = 0
         elif self.dir.name == "up_left":
             pixels_x = -1
-            pixels_y = -1
+            pixels_y = randint(-4, -1)
         elif self.dir.name == "down_left":
             pixels_x = -1
-            pixels_y = 1
+            pixels_y = randint(1, 3)
         elif self.dir.name == "down_right":
             pixels_x = 1
-            pixels_y = 1
+            pixels_y = randint(1, 4)
         else:
             pixels_x = 1
-            pixels_y = -1
+            pixels_y = randint(-4, -1)
 
         canvas.move(item, pixels_x, pixels_y)
         canvas.after(1, self.move)
-
-        self.detecting_walls()
+        self.path.append(canvas.coords(item))
+        self.detecting_walls(right_walls, left_walls, up_walls, down_walls)
+        
+        
         print(self.dir.name)
         print(canvas.coords(item))
+    
+    def draw_path(self):
+        if var_roomba.get() == 0:
+            canvas.delete("path")
+        else:
+            
+            for i in self.path:
+                canvas.create_oval(i[0], i[1], i[0], i[1], fill="Red", tags="path")
 
 
 
 def draw_scenario():
+
 
     #Start drawing scenario for random room
     x = randint(120, 500)
@@ -180,13 +176,33 @@ def draw_scenario():
 
     item = canvas.create_image(x_roomba, y_roomba, image= image)
 
-def check():
-    if var.get() == 0:
+def show_room():
+    if var_scenario.get() == 0:
         canvas.delete("wall")
     else:
         for i in walls:
             canvas.create_line(i[0], i[1], i[2], i[3],tags="wall")
     
+
+def set_walls_direction():
+    right_walls = []
+    left_walls = []
+    up_walls = []
+    down_walls = []
+
+    for wall in walls:
+        if wall[0] != wall[2]:
+            #move on x-axis
+            if wall[0] < wall[2]:
+                right_walls.append(wall)
+            else:
+                left_walls.append(wall)
+        elif wall[1] < wall[3]:
+            down_walls.append(wall)
+        else:
+            up_walls.append(wall)
+
+    return right_walls, left_walls, up_walls, down_walls
 
 
 #Above are all functions
@@ -197,9 +213,9 @@ def check():
 
 #resize image
 path = r"C:\Users\dadbc\Desktop\Phy\Repositorios\Roomba\robot.png"
-img = cv2.imread(path)
-img = cv2.resize(img, (25, 25))
-cv2.imwrite(path, img)
+#img = cv2.imread(path)
+#img = cv2.resize(img, (25, 25))
+#cv2.imwrite(path, img)
 #end resize
 
 #create window
@@ -219,14 +235,20 @@ image = ImageTk.PhotoImage(Image.open(path))
 #draw the scenario and the roomba
 draw_scenario()
 
+right_walls, left_walls, up_walls, down_walls = set_walls_direction()
+
 roomba = Roomba()
 
 #Checkbox to show or not the scenario
-var = IntVar()
-checkbox = Checkbutton(root, text= "Show Room", variable= var, command= check)
-checkbox.pack()
-checkbox.toggle()
+var_scenario = IntVar()
+checkbox1 = Checkbutton(root, text= "Show Room", variable= var_scenario, command= show_room)
+checkbox1.pack()
+checkbox1.toggle()
 
+#Checkbox for what roomba knows
+var_roomba = IntVar()
+checkbox2 = Checkbutton(root, text="Show last roomba path", variable= var_roomba, command=roomba.draw_path)
+checkbox2.pack()
 
 #Move image function
 roomba.move()
