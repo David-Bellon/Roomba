@@ -1,9 +1,13 @@
-from calendar import c
+from concurrent.futures import thread
+from time import sleep, time
 import cv2
 from tkinter import *
 from PIL import ImageTk, Image
 from random import randint
 from enum import Enum
+import threading
+
+from django.test import tag
 
 
 walls = []
@@ -34,6 +38,9 @@ class Roomba():
         cord_x = canvas.coords(item)[0]
         cord_y = canvas.coords(item)[1]
 
+        self.x = cord_x
+        self.y = cord_y
+
 
         collision = False
 
@@ -61,6 +68,21 @@ class Roomba():
                 new_direction = randint(1, 8)
             
             self.dir = self.direction(new_direction)
+
+    def scan_room(self):
+        for i in down_walls:
+                if self.x + 15 >= i[0] and self.y >= i[1] and self.y <= i[3]:
+                    self.knows.add((self.x + 15, self.y))
+        for i in up_walls:
+                if self.x - 15 <= i[0] and self.y <= i[1] and self.y >= i[3]:
+                    self.knows.add((self.x - 15, self.y))
+        for i in right_walls:
+                if self.y - 15 <= i[1] and self.x >= i[0] and self.x <= i[2]:
+                    self.knows.add((self.x, self.y - 15))
+        for i in left_walls:
+                if self.y + 15 >= i[1] and self.x <= i[0] and self.x >= i[2]:
+                    self.knows.add((self.x, self.y + 15))
+        
 
     def move(self):
         pixels_x = 0
@@ -91,27 +113,42 @@ class Roomba():
             pixels_y = randint(-4, -1)
 
         canvas.move(item, pixels_x, pixels_y)
-        canvas.after(1, self.move)
+        canvas.after(10, self.move)
         self.path.append(canvas.coords(item))
         self.detecting_walls(right_walls, left_walls, up_walls, down_walls)
+        self.scan_room()
         
         
         print(self.dir.name)
         print(canvas.coords(item))
-    
+
     def draw_path(self):
         if var_roomba.get() == 0:
             canvas.delete("path")
         else:
-            
             for i in self.path:
                 canvas.create_oval(i[0], i[1], i[0], i[1], fill="Red", tags="path")
 
+    def draw_scan(self):
+        if var_scan.get() == 0:
+            canvas.delete("scanned")
+        else:
+            for i in self.knows:
+                canvas.create_oval(i[0], i[1], i[0], i[1], fill="Green", tags="scanned")
 
+    def thread_move(self):
+        x = threading.Thread(target=self.move)
+        x.start()
+    
+    def thread_draw_scan(self):
+        x = threading.Thread(target=self.draw_scan)
+        x.start()
+    
+    def thread_draw_path(self):
+        x = threading.Thread(target=self.draw_path)
+        x.start()
 
 def draw_scenario():
-
-
     #Start drawing scenario for random room
     x = randint(120, 500)
     canvas.create_line(100, 100, x, 100, tags="wall")
@@ -182,6 +219,8 @@ def show_room():
     else:
         for i in walls:
             canvas.create_line(i[0], i[1], i[2], i[3],tags="wall")
+
+
     
 
 def set_walls_direction():
@@ -247,11 +286,16 @@ checkbox1.toggle()
 
 #Checkbox for what roomba knows
 var_roomba = IntVar()
-checkbox2 = Checkbutton(root, text="Show last roomba path", variable= var_roomba, command=roomba.draw_path)
+checkbox2 = Checkbutton(root, text="Show last roomba path", variable= var_roomba, command=roomba.thread_draw_path)
 checkbox2.pack()
 
+#Checkbox for scanned
+var_scan = IntVar()
+checkbox3 = Checkbutton(root, text="Scanned", variable= var_scan, command=roomba.draw_scan)
+checkbox3.pack()
+
 #Move image function
-roomba.move()
+roomba.thread_move()
 
 root.mainloop()
 
