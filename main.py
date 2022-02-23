@@ -1,5 +1,4 @@
 from concurrent.futures import thread
-from time import sleep, time
 import cv2
 from tkinter import *
 from PIL import ImageTk, Image
@@ -7,7 +6,7 @@ from random import randint
 from enum import Enum
 import threading
 
-from django.test import tag
+from matplotlib.pyplot import table
 
 
 walls = []
@@ -113,7 +112,7 @@ class Roomba():
             pixels_y = randint(-4, -1)
 
         canvas.move(item, pixels_x, pixels_y)
-        canvas.after(10, self.move)
+        canvas.after(5, self.move)
         self.path.append(canvas.coords(item))
         self.detecting_walls(right_walls, left_walls, up_walls, down_walls)
         self.scan_room()
@@ -213,6 +212,78 @@ def draw_scenario():
 
     item = canvas.create_image(x_roomba, y_roomba, image= image)
 
+
+def draw_obstacle():
+    #Draw an object in a random wall with random size
+    selected_wall = randint(1, 2)
+    place_in = list()
+    if selected_wall == 1:
+        place_in = left_walls
+    else:
+        place_in = right_walls
+
+    wall_to_place = place_in[randint(0, len(place_in) - 1)]
+
+    position_x = 0
+    position_y = 0
+
+    if wall_to_place[0] < wall_to_place[2]:
+        limit = wall_to_place[2]
+        position_x = randint(wall_to_place[0], wall_to_place[2]) 
+    else:
+        limit = wall_to_place[0]
+        position_x = randint(wall_to_place[2], wall_to_place[0]) 
+    
+    if wall_to_place[1] < wall_to_place[3]:
+        position_y = randint(wall_to_place[1], wall_to_place[3]) 
+    else:
+        position_y = randint(wall_to_place[3], wall_to_place[1])
+
+    start_x = position_x
+
+    if selected_wall == 1:
+
+        end_y = position_y
+
+        incremenet_y = randint(30, 50)
+        canvas.create_line(position_x, position_y, position_x, position_y - incremenet_y, tags="block")
+        up_walls.append([position_x, position_y, position_x, position_y + incremenet_y])
+
+        position_y = position_y - incremenet_y
+
+        increment_x = randint(start_x, limit)
+        canvas.create_line(position_x, position_y, increment_x, position_y, tags="block")
+        right_walls.append([position_x, position_y, increment_x, position_y])
+
+        position_x = increment_x
+
+        canvas.create_line(position_x, position_y, position_x, end_y, tags="block")
+        up_walls.append([position_x, position_y, position_x, end_y])
+    else:
+
+        end_y = position_y
+
+        incremenet_y = randint(30, 50)
+        canvas.create_line(position_x, position_y, position_x, position_y + incremenet_y, tags="block")
+        down_walls.append([position_x, position_y, position_x, position_y + incremenet_y])
+
+        position_y = position_y + incremenet_y
+
+        increment_x = randint(start_x, limit)
+        canvas.create_line(position_x, position_y, increment_x, position_y, tags="block")
+        right_walls.append([position_x, position_y, increment_x, position_y])
+
+        position_x = increment_x
+
+        canvas.create_line(position_x, position_y, position_x, end_y, tags="block")
+        up_walls.append([position_x, position_y, position_x, end_y])
+    
+
+
+
+
+
+
 def show_room():
     if var_scenario.get() == 0:
         canvas.delete("wall")
@@ -276,6 +347,9 @@ draw_scenario()
 
 right_walls, left_walls, up_walls, down_walls = set_walls_direction()
 
+draw_obstacle()
+
+
 roomba = Roomba()
 
 #Checkbox to show or not the scenario
@@ -286,7 +360,7 @@ checkbox1.toggle()
 
 #Checkbox for what roomba knows
 var_roomba = IntVar()
-checkbox2 = Checkbutton(root, text="Show last roomba path", variable= var_roomba, command=roomba.thread_draw_path)
+checkbox2 = Checkbutton(root, text="Show last roomba path", variable= var_roomba, command=roomba.draw_path)
 checkbox2.pack()
 
 #Checkbox for scanned
