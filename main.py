@@ -112,7 +112,7 @@ class Roomba():
             pixels_y = randint(-4, -1)
 
         canvas.move(item, pixels_x, pixels_y)
-        canvas.after(5, self.move)
+        canvas.after(10, self.move)
         self.path.append(canvas.coords(item))
         self.detecting_walls(right_walls, left_walls, up_walls, down_walls)
         self.scan_room()
