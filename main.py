@@ -1,4 +1,5 @@
 from concurrent.futures import thread
+from turtle import up
 import cv2
 from tkinter import *
 from PIL import ImageTk, Image
@@ -112,7 +113,7 @@ class Roomba():
             pixels_y = randint(-4, -1)
 
         canvas.move(item, pixels_x, pixels_y)
-        canvas.after(10, self.move)
+        canvas.after(1, self.move)
         self.path.append(canvas.coords(item))
         self.detecting_walls(right_walls, left_walls, up_walls, down_walls)
         self.scan_room()
@@ -247,18 +248,18 @@ def draw_obstacle():
 
         incremenet_y = randint(30, 50)
         canvas.create_line(position_x, position_y, position_x, position_y - incremenet_y, tags="block")
-        up_walls.append([position_x, position_y, position_x, position_y + incremenet_y])
+        down_walls.append([position_x, position_y - incremenet_y, position_x, position_y])
 
         position_y = position_y - incremenet_y
 
         increment_x = randint(start_x, limit)
         canvas.create_line(position_x, position_y, increment_x, position_y, tags="block")
-        right_walls.append([position_x, position_y, increment_x, position_y])
+        left_walls.append([increment_x, position_y, position_x, position_y])
 
         position_x = increment_x
 
         canvas.create_line(position_x, position_y, position_x, end_y, tags="block")
-        up_walls.append([position_x, position_y, position_x, end_y])
+        up_walls.append([position_x, end_y, position_x, position_y])
     else:
 
         end_y = position_y
@@ -312,6 +313,8 @@ def set_walls_direction():
         else:
             up_walls.append(wall)
 
+    
+
     return right_walls, left_walls, up_walls, down_walls
 
 
@@ -347,7 +350,7 @@ draw_scenario()
 
 right_walls, left_walls, up_walls, down_walls = set_walls_direction()
 
-draw_obstacle()
+#draw_obstacle()
 
 
 roomba = Roomba()
