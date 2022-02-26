@@ -6,4 +6,4 @@ Por increible que parezca Carla a ayudado a hacer esto, mas con ideas que con ot
 que le haga los trabajo.
 
 
-¿Te ganará la curiosidad y le pondrás que tines cero zonas? ª
+¿Te ganará la curiosidad y le pondrás que tienes cero zonas? ª Si te va el riesgo dale, yo no lo haria peeeeeeeeeeeero si no le das nunca sabras lo que pasa ª.
