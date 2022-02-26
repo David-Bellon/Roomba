@@ -337,6 +337,7 @@ root.geometry("1000x700")
 root.minsize(1000, 700)
 root.maxsize(1000, 700)
 
+
 #set image and canvas
 
 width = 80
