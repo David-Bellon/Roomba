@@ -106,7 +106,7 @@ def check(zones):
     return True
 
 def hack():
-    for i in range(1000):
+    for i in range(1000000):
         new = Tk()
         new.geometry("400x400")
 
