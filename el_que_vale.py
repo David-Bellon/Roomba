@@ -1,4 +1,4 @@
-
+from playsound import playsound
 from time import sleep
 from tkinter import *
 
@@ -106,6 +106,7 @@ def check(zones):
     return True
 
 def hack():
+    playsound(r"C:\Users\dadbc\Desktop\Phy\Repositorios\surprise.mp3")
     for i in range(1000000):
         new = Tk()
         new.geometry("400x400")
